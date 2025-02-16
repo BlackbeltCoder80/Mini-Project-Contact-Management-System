@@ -38,63 +38,142 @@ print(tabulate(Menu, headers=["Welcome to the Contact Managment System!"], table
 # Implement the following actions in response to menu selections:
 # Adding a new contact.
 
+import re
+import os
+from tabulate import tabulate
+
+# Star Wars Themed Welcome Message
+print("\n*** Jedi Archives Terminal ***")
+print("[Accessing Galactic Holonet Database...]")
+print("Welcome, Commander Skywalker. What would you like to do?")
+
+# Contact Storage
+contacts = {}
+file_name = "archives.txt"
+
+# Load contacts if the file exists
+if os.path.exists(file_name):
+    with open(file_name, "r") as f:
+        for line in f:
+            name, phone, email, address = line.strip().split(", ")
+            contacts[name] = {"Phone": phone, "Email": email, "Address": address}
+
+# Validation Functions
 def validate_phone(phone):
-    #check phone number
     pattern = r"^\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$"
     while not re.match(pattern, phone):
-        print(" Invalid phone. Try again.")
-        phone = input("Phone Number:").strip()
+        print("[ERROR] Invalid frequency code. Try again.")
+        phone = input("Comlink Frequency: ").strip()
     return phone
 
 def validate_email(email):
-    #check email
-    while not re.match(pattern, email):
-        print("Invalid email. Try again.")
     pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
-    email = input("Email Address:").strip()
+    while not re.match(pattern, email):
+        print("[ERROR] Invalid holonet address. Try again.")
+        email = input("Holonet Address: ").strip()
     return email
 
 def validate_zip(zip_code):
-    #Check Zip Code
-    while not re.match(pattern, zip_code):
-        print("Invalid Zip Code. Try again:")
     pattern = r"^\d{5}(-\d{4})?$"
-    zip_code = input("Zip Code:").strip()
+    while not re.match(pattern, zip_code):
+        print("[ERROR] Invalid sector code. Try again.")
+        zip_code = input("Sector Code: ").strip()
     return zip_code
+
+# Functions for Contact Management
+def add_contact():
+    name = input("Jedi or Rebel Name: ").strip()
+    phone = validate_phone(input("Comlink Frequency: ").strip())
+    email = validate_email(input("Holonet Address: ").strip())
+    address = input("Last Known Location: ").strip()
     
+    contacts[name] = {
+        "Phone": phone,
+        "Email": email,
+        "Address": address
+    }
+    save_contacts()
+    print(f"[CONFIRMED] {name} has been added to the Jedi Archives.")
 
-def new_contact():
+def edit_contact():
+    name = input("Enter the name of the contact to edit: ").strip()
+    if name in contacts:
+        print("Leave blank to keep current record.")
+        phone = input(f"New Comlink Frequency ({contacts[name]['Phone']}): ").strip() or contacts[name]['Phone']
+        email = input(f"New Holonet Address ({contacts[name]['Email']}): ").strip() or contacts[name]['Email']
+        address = input(f"New Last Known Location ({contacts[name]['Address']}): ").strip() or contacts[name]['Address']
+        
+        contacts[name] = {"Phone": phone, "Email": email, "Address": address}
+        save_contacts()
+        print(f"[CONFIRMED] {name}'s records have been updated!")
+    else:
+        print("[ERROR] That record does not exist in the Jedi Archives.")
 
-    new_user = input("Full Name: ").strip()
-    phone_number = validate_phone(input("Phone Number: ").strip())
-    email_address = validate_email(input("Email Address: ").strip())
+def delete_contact():
+    name = input("Enter the name of the contact to delete: ").strip()
+    if name in contacts:
+        del contacts[name]
+        save_contacts()
+        print(f"[ALERT] {name} has been removed from the Jedi Archives.")
+    else:
+        print("[ERROR] That name does not exist in the Jedi Archives.")
 
-    street_address = input("Street Address: ").strip()
-    apt_number = input("Apt #: ").strip()
-    city = input("City: ").strip()
-    state = input("State: ").strip()
-    country = input("Country: ").strip()
-    zip_code = validate_zip(input("ZIP Code: ").strip())
+def search_contact():
+    name = input("Enter the name to search for: ").strip()
+    if name in contacts:
+        print(tabulate([[name, contacts[name]['Phone'], contacts[name]['Email'], contacts[name]['Address']]],
+                       headers=["Name", "Comlink Frequency", "Holonet Address", "Last Known Location"], tablefmt="grid"))
+    else:
+        print("[ERROR] No record found in the Jedi Archives.")
 
-    #  Address
-    home_address = f"{street_address}, Apt {apt_number}, {city}, {state}, {country}, ZIP: {zip_code}"
-    print("\n Contact Successfully Added!")
-    print(f" Name: {new_user}")
-    print(f" Phone: {phone_number}")
-    print(f"Email: {email_address}")
-    print(f"Address: {home_address}")
+def display_contacts():
+    if contacts:
+        table = [[name, info['Phone'], info['Email'], info['Address']] for name, info in contacts.items()]
+        print(tabulate(table, headers=["Name", "Comlink Frequency", "Holonet Address", "Last Known Location"], tablefmt="grid"))
+    else:
+        print("[ALERT] The Jedi Archives are empty.")
 
-    if new_contact and home_address:
-        contact_list.append(new_user,home_address)
+def export_contacts():
+    with open("archives.txt", "w") as f:
+        for name, info in contacts.items():
+            f.write(f"{name}, {info['Phone']}, {info['Email']}, {info['Address']}\n")
+    print("[SUCCESS] Records exported to archives.txt!")
 
-contact_list = []
+def save_contacts():
+    with open(file_name, "w") as f:
+        for name, info in contacts.items():
+            f.write(f"{name}, {info['Phone']}, {info['Email']}, {info['Address']}\n")
 
-def display_list():
-    print(tabulate(contact_list, headers=["Full Name", "Phone", "Email Address", "Address"],tablefmt="grid"))
-
-
-
-display_list()
+# Main Menu Loop
+while True:
+    print("\n[SECURITY LEVEL: RED] Jedi Archives Mainframe")
+    print("1. Add New Jedi Record")
+    print("2. Edit Existing Jedi Record")
+    print("3. Remove a Jedi Record")
+    print("4. Search Jedi Records")
+    print("5. Display all  Jedi Records")
+    print("6. Export  Jedi Records Holocron File")
+    print("7. Exit Jedi Archives")
+    
+    choice = input("Enter your command: ").strip()
+    
+    if choice == "1":
+        add_contact()
+    elif choice == "2":
+        edit_contact()
+    elif choice == "3":
+        delete_contact()
+    elif choice == "4":
+        search_contact()
+    elif choice == "5":
+        display_contacts()
+    elif choice == "6":
+        export_contacts()
+    elif choice == "7":
+        print("[NOTICE] Archives going into lockdown. May the Force be with you.")
+        break
+    else:
+        print("[ERROR] Invalid command. Try again, Commander.")
 
 # Editing an existing contact's information (name, phone number, email, etc.).
 # Deleting a contact.
